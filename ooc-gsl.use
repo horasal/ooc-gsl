@@ -1,0 +1,4 @@
+Name: GSL
+Description: GNU Scientific Library
+Pkgs: gsl
+SourcePath: source
