@@ -4,6 +4,8 @@ include gsl/gsl_complex_math
 Complex: cover from gsl_complex{
     dat : extern Double[2]
 
+    toString: func -> String{ "#{dat[0]}+#{dat[1]}i" }
+
     new: extern(gsl_complex_rect) static func(Double, Double) -> This
     newTheta: extern(gsl_complex_polar) static func(Double, Double) -> This
 
