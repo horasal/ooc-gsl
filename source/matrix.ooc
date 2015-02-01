@@ -1,6 +1,9 @@
 include gsl/gsl_block
 include gsl/gsl_vector
 
+
+// TODO use gc_malloc instead of gsl_alloc family
+
 gslBlock: cover from gsl_block{
     size: extern SizeT
     data: extern Double*
@@ -25,6 +28,16 @@ Vector: cover from gslVector*{
     new: extern(gsl_vector_alloc) static func(SizeT) -> This
     new: extern(gsl_vector_calloc) static func ~zero (SizeT) -> This
     free: extern(gsl_vector_free) func
+
+    toString: func -> String{
+        result := "["
+        for(i in 0.. this size()){
+            result += this[i] toString() + ","
+        }
+        result + "]"
+    }
+
+    size : func -> SizeT{ this@ size }
 
     get: extern(gsl_vector_get) func(SizeT) -> Double
     set: extern(gsl_vector_set) func(SizeT, Double)
