@@ -1,5 +1,6 @@
 include gsl/gsl_block
 include gsl/gsl_vector
+include gsl/gsl_matrix
 
 
 // TODO use gc_malloc instead of gsl_alloc family
@@ -92,4 +93,103 @@ Vector: cover from gslVector*{
         result div(other)
         result
     }
+}
+
+gslMatrix: cover from gsl_matrix{
+    size1: extern SizeT
+    size2: extern SizeT
+    tda: extern SizeT
+    data: extern Double*
+    block: extern Block;
+    owner: extern Int
+}
+
+Matrix: cover from gslMatrix*{
+    new: extern(gsl_matrix_alloc) static func(n1, n2: SizeT) -> This
+    new: extern(gsl_matrix_calloc) static func ~zero (n1, n2: SizeT) -> This
+    free: extern(gsl_matrix_free) func
+
+    size1: func -> SizeT{ this@ size1 }
+    size2: func -> SizeT{ this@ size2 }
+
+    get: extern(gsl_matrix_get) func(i,j: SizeT) -> Double
+    set: extern(gsl_matrix_set) func(i,j: SizeT, x: Double) -> Double
+    getPtr: extern(gsl_matrix_ptr) func(i, j: SizeT) -> Double*
+    setAll: extern(gsl_matrix_set_all) func(x: Double)
+    setZero: extern(gsl_matrix_set_zero) func
+    setIdentity: extern(gsl_matrix_set_identity) func
+
+    copyFrom: extern(gsl_matrix_memcpy) func(other: This)
+    copyTo: func(other: This){ other copyFrom(this) }
+    swap: extern(gsl_matrix_swap) func(other: This)
+    clone: func -> This{
+        other := Matrix new(this size1(), this size2())
+        other copyFrom(this)
+        other
+    }
+    
+    /* private function 
+     From the manual of gsl, get_row and get_col is function of matrix, however,
+     they are not started from parameter matrix.
+     */
+    _get_row: extern(gsl_matrix_get_row) static func(v: Vector, m: Matrix, i: SizeT)
+    _get_col: extern(gsl_matrix_get_col) static func(v: Vector, m: Matrix, i: SizeT)
+
+    getRow: func(i: SizeT) -> Vector{
+        v := Vector new(this size1())
+        _get_row(v, this, i)
+        v
+    }
+    getCol: func(i: SizeT) -> Vector{
+        v := Vector new(this size2())
+        _get_col(v, this, i)
+        v
+    }
+
+    setRow: extern(gsl_matrix_set_row) func(i: SizeT, v: Vector)
+    setCol: extern(gsl_matrix_set_col) func(i: SizeT, v: Vector)
+
+    _transposeTo: extern(gsl_matrix_transpose_memcpy) static func(a, b: Matrix) -> Int
+
+    transpose: extern(gsl_matrix_transpose) func -> Int
+    transposeTo: func -> Matrix{
+        m := Matrix new(this size1(), this size2())
+        _transposeTo(m, this)
+        m
+    }
+
+    swapRow: extern(gsl_matrix_swap_rows) func(i, j: SizeT) -> Int
+    swapCol: extern(gsl_matrix_swap_rows) func(i, j: SizeT) -> Int
+    swapRowCol: extern(gsl_matrix_swap_rowcol) func(i, j: SizeT) -> Int
+    swapColRow: func(i, j: SizeT) -> Int{ swapRowCol(j, i) }
+
+    add: extern(gsl_matrix_add) func(other: Matrix) -> Int
+    sub: extern(gsl_matrix_sub) func(other: Matrix) -> Int
+    mulElem: extern(gsl_matrix_mul_elements) func(other: Matrix) -> Int
+    divElem: extern(gsl_matrix_div_elements) func(other: Matrix) -> Int
+    mul: extern(gsl_matrix_scale) func ~elem (other: Double) -> Int
+    add: extern(gsl_matrix_add_constant) func ~elem (other: Double) -> Int
+
+    max: extern(gsl_matrix_max) func -> Double
+    min: extern(gsl_matrix_min) func -> Double
+
+    isNull?: extern(gsl_matrix_isnull) func -> Bool
+    isPos?: extern(gsl_matrix_ispos) func -> Bool
+    isNeg?: extern(gsl_matrix_isneg) func -> Bool
+    isNonneg?: extern(gsl_matrix_isnonneg) func -> Bool
+
+    isEqual?: extern(gsl_matrix_equal) func(other: Matrix) -> Bool
+
+    toString: func -> String{
+        result := "{\n"
+        for(i in 0..this size1()){
+            result += "["
+            for(j in 0..this size2()){
+                result += "%lf, " format(this get(i, j))
+            }
+            result += "]\n"
+        }
+        result + "}"
+    }
+
 }
