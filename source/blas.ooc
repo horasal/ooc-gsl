@@ -42,13 +42,20 @@ _dsyr2k:extern( gsl_blas_dsyr2k ) func(uplo: Uplo, Trans: Transpose, alpha: Doub
 
 
 /* add blas functions to Matrix and Vector */
-extend Vector{
-}
-
 extend Matrix{
     mul: func ~matrix (other: Matrix) -> This {
         c := Matrix new(this size1(), this size2())
-        _degmm(Transpose NoTrans, Transpose NoTRans, 1., this, other, 0, c)
+        _dgemm(Transpose NoTrans, Transpose NoTrans, 1., this, other, 0., c)
         c
     }
+
+    mul: func ~vector (other: Vector) -> Vector{
+        c := Vector new(this size1())
+        _dgemv(Transpose NoTrans, 1., this, other, 0., c)
+        c
+    }
+
 }
+
+operator * (this: Matrix, other: Matrix) -> Matrix { this mul ~matrix (other) }
+operator * (this: Matrix, other: Vector) -> Vector { this mul ~vector (other) }

@@ -3,6 +3,7 @@ include gsl/gsl_vector
 include gsl/gsl_matrix
 
 
+
 // TODO use gc_malloc instead of gsl_alloc family
 
 gslBlock: cover from gsl_block{
@@ -62,7 +63,7 @@ Vector: cover from gslVector*{
     mul: extern(gsl_vector_mul) func(This) -> Int
     div: extern(gsl_vector_div) func(This) -> Int
 
-    scale: extern(gsl_vector_scale) func(Double) -> Int
+    mul: extern(gsl_vector_scale) func ~constant (Double) -> Int
     add: extern(gsl_vector_add_constant) func ~constant(Double) -> Int
 
     operator [] (i: SizeT) -> Double{ get(i) }
@@ -118,6 +119,14 @@ Matrix: cover from gslMatrix*{
     setAll: extern(gsl_matrix_set_all) func(x: Double)
     setZero: extern(gsl_matrix_set_zero) func
     setIdentity: extern(gsl_matrix_set_identity) func
+
+    set: func ~closure (f: Func(SizeT,SizeT)->Double){
+        for(i in 0 .. this size1()){
+            for(j in 0 .. this size2()){
+                set(i, j, f(i, j))
+            }
+        }
+    }
 
     copyFrom: extern(gsl_matrix_memcpy) func(other: This)
     copyTo: func(other: This){ other copyFrom(this) }
@@ -192,4 +201,39 @@ Matrix: cover from gslMatrix*{
         result + "}"
     }
 
+    operator + (other: This) -> This{
+        r := this clone()
+        r add(other)
+        r
+    }
+
+    operator + (other: Double) -> This{
+        r := this clone()
+        r add(other)
+        r
+    }
+
+    operator - (other: This) -> This{
+        r := this clone()
+        r sub(other)
+        r
+    }
+
+    operator - (other: Double) -> This{
+        r := this clone()
+        r add(-other)
+        r
+    }
+
+    operator / (other: Double) -> This{
+        r := this clone()
+        r mul(1./other)
+        r
+    }
+
+    operator / (other: This) -> This{
+        r := this clone()
+        r divElem(other)
+        r
+    }
 }
