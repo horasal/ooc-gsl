@@ -128,6 +128,14 @@ Matrix: cover from gslMatrix*{
         }
     }
 
+    get: func ~closure (f: Func(SizeT, SizeT, Double)){
+        for(i in 0 .. this size1()){
+            for(j in 0 .. this size2()){
+                f(i, j, get(i, j))
+            }
+        }
+    }
+
     copyFrom: extern(gsl_matrix_memcpy) func(other: This)
     copyTo: func(other: This){ other copyFrom(this) }
     swap: extern(gsl_matrix_swap) func(other: This)
@@ -162,7 +170,7 @@ Matrix: cover from gslMatrix*{
 
     transpose: extern(gsl_matrix_transpose) func -> Int
     transposeTo: func -> Matrix{
-        m := Matrix new(this size1(), this size2())
+        m := Matrix new(this size2(), this size1())
         _transposeTo(m, this)
         m
     }
