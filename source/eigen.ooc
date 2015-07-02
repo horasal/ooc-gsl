@@ -14,6 +14,17 @@ _eigen_symmv_alloc : extern(gsl_eigen_symmv_alloc) func (n: SizeT) -> Pointer
 _eigen_symmv_free : extern(gsl_eigen_symmv_free) func (w: Pointer)
 _eigen_symmv : extern(gsl_eigen_symmv) func(A: Matrix, eval: Vector, evec: Matrix, w: Pointer) -> Int
 
+/* sort */
+gsl_eigen_sort_t: extern enum{
+    GSL_EIGEN_SORT_VAL_ASC
+    GSL_EIGEN_SORT_VAL_DESC
+    GSL_EIGEN_SORT_ABS_ASC
+    GSL_EIGEN_SORT_ABS_DESC
+}
+
+eigenSymmvSort: extern(gsl_eigen_symmv_sort) func( eval: Vector, evec: Matrix, sort: gsl_eigen_sort_t) -> Int
+eigenGensymmvSort: extern(gsl_eigen_gensymmv_sort) func( eval: Vector, evec: Matrix, sort: gsl_eigen_sort_t) -> Int
+
 extend Matrix{
     eigenValue: func -> Vector{
         r := Vector new(this size1())

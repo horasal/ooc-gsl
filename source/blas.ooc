@@ -57,5 +57,24 @@ extend Matrix{
 
 }
 
+extend Vector{
+    mul: func ~matrix (other: Matrix) -> This{
+        c := Vector new(this size())
+        _dgemv(Transpose Trans, 1., other, this, 0., c)
+        c
+    }
+    
+    mul: func ~vector (other: Vector) -> Matrix{
+        c := Matrix new(this size(), other size())
+        _dger(1, this, other, c)
+        c
+    }
+
+    norm: func -> Double{ _dnrm2(this) }
+    sum: func -> Double { _dasum(this) }
+    maxidx: func -> SizeT { _idamax(this) }
+}
+
 operator * (this: Matrix, other: Matrix) -> Matrix { this mul ~matrix (other) }
 operator * (this: Matrix, other: Vector) -> Vector { this mul ~vector (other) }
+operator * (this: Vector, other: Matrix) -> Vector { this mul ~matrix (other) }

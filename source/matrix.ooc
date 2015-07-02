@@ -44,6 +44,26 @@ Vector: cover from gslVector*{
     get: extern(gsl_vector_get) func(SizeT) -> Double
     set: extern(gsl_vector_set) func(SizeT, Double)
 
+    set: func ~closureix (f: Func(SizeT, Double)->Double){
+        for(i in 0..this size()){ set(i, f(i, get(i))) }
+    }
+
+    set: func ~closurex (f: Func(Double)->Double){
+        for(i in 0..this size()){ set(i, f(get(i))) }
+    }
+
+    set: func ~closure (f: Func()->Double){
+        for(i in 0..this size()){ set(i, f()) }
+    }
+
+    get: func ~closurex(f: Func(Double)){
+        for(i in 0..this size()){ f(get(i)) }
+    }
+
+    get: func ~closureix (f: Func(SizeT,Double)){
+        for(i in 0..this size()){ f(i,get(i)) }
+    }
+
     basis: extern(gsl_vector_set_basis) func(SizeT) -> Int
 
     swap: extern(gsl_vector_swap_elements) func(SizeT, SizeT) -> Int
@@ -60,7 +80,7 @@ Vector: cover from gslVector*{
 
     add: extern(gsl_vector_add) func(This) -> Int
     sub: extern(gsl_vector_sub) func(This) -> Int
-    mul: extern(gsl_vector_mul) func(This) -> Int
+    mulElem: extern(gsl_vector_mul) func(This) -> Int
     div: extern(gsl_vector_div) func(This) -> Int
 
     mul: extern(gsl_vector_scale) func ~constant (Double) -> Int
@@ -86,7 +106,7 @@ Vector: cover from gslVector*{
     }
     operator * (other: This) -> This{
         result := this clone()
-        result mul(other)
+        result mulElem(other)
         result
     }
     operator / (other: This) -> This{
@@ -120,7 +140,15 @@ Matrix: cover from gslMatrix*{
     setZero: extern(gsl_matrix_set_zero) func
     setIdentity: extern(gsl_matrix_set_identity) func
 
-    set: func ~closure (f: Func(SizeT,SizeT)->Double){
+    set: func ~closure (f: Func->Double){
+        for(i in 0 .. this size1()){
+            for(j in 0 .. this size2()){
+                set(i, j, f())
+            }
+        }
+    }
+
+    set: func ~closureij (f: Func(SizeT,SizeT)->Double){
         for(i in 0 .. this size1()){
             for(j in 0 .. this size2()){
                 set(i, j, f(i, j))
@@ -128,7 +156,23 @@ Matrix: cover from gslMatrix*{
         }
     }
 
-    get: func ~closure (f: Func(SizeT, SizeT, Double)){
+    set: func ~closureijx (f: Func(SizeT,SizeT,Double)->Double){
+        for(i in 0 .. this size1()){
+            for(j in 0 .. this size2()){
+                set(i, j, f(i, j, get(i,j)))
+            }
+        }
+    }
+
+    get: func ~closurex (f: Func(Double)){
+        for(i in 0 .. this size1()){
+            for(j in 0 .. this size2()){
+                f(get(i, j))
+            }
+        }
+    }
+
+    get: func ~closureijx (f: Func(SizeT, SizeT, Double)){
         for(i in 0 .. this size1()){
             for(j in 0 .. this size2()){
                 f(i, j, get(i, j))
