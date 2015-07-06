@@ -13,20 +13,31 @@ NMF : class{
     x: Matrix
     W,H: Matrix
 
+    x2: Matrix
+    W2, H2: Matrix
+
+    lambda : Double = -0.05
+
     random: static func(i,j: SizeT) -> Double{
         Random random() as Double / INT_MAX as Double
     }
 
-    init: func(=x, k: SizeT){
+    init: func(=x, =x2, k: SizeT){
         W = Matrix new(x size1(), k)
         H = Matrix new(k, x size2())
+        W2 = Matrix new(x2 size1(), k)
+        H2 = Matrix new(k, x2 size2())
         W set(this random)
         H set(this random)
+        W2 set(this random)
+        H2 set(this random)
     }
 
     free: func{
         W free()
         H free()
+        W2 free()
+        H2 free()
     }
 
     error: func -> Double{
@@ -96,11 +107,29 @@ NMF : class{
         }
     }
 
+    gradientDescent: func(n: SizeT, maxiter: SizeT = 100){
+        // how many data is same
+        N := Matrix new(x size2(), n)
+        N set(|i,j| i == j ? 1. : 0.)
+        Nt := N transposeTo()
 
-    gradientDescent: func(maxiter: SizeT = 100){
+        N2 := Matrix new(x2 size2(), n)
+        N2 set(|i,j| i == j ? 1. : 0.)
+        Nt2 := N2 transposeTo()
+
         for(i in 0..maxiter){
+            // first part of loss func, |x - WH|_F
             recon := W * H
-            error := x - W * H
+            error := x - recon
+
+            // second part of loss func |x2 - W2H2|_F
+            recon2 := W2 * H2
+            error2 := x2 - recon2
+
+            cerror := H*N 
+            temp2 := H2*N2
+            cerror sub(temp2)
+            temp2 free()
 
             /*{
                 sum := 0.0
@@ -108,29 +137,64 @@ NMF : class{
                 sum toString() println()
             }*/
             
-
+            // update H
             Wt := W transposeTo()
             dH := Wt * error
-            dH mul(-0.05)
+            dH mul(lambda)
+            ce1 := cerror * Nt
+            dH add(ce1)
             H sub(dH)
             H set(|x| x < 0 ? 0. : x)
 
+            ce1 free()
+            dH free()
+            Wt free()
+
+            Wt2 := W2 transposeTo()
+            dH2 := Wt2 * error2
+            ce2 := cerror * Nt2
+            dH2 sub(ce2)
+            dH2 mul(lambda)
+            H2 sub(dH2)
+            H2 set(|x| x < 0 ? 0. : x)
+
+            ce2 free()
+            dH2 free()
+            Wt2 free()
+
+            cerror free()
+
+            // update W
             Ht := H transposeTo()
             dW := error * Ht
-            dW mul(-0.05)
+            dW mul(lambda)
             W sub(dW)
             W set(|x| x < 0 ? 0. : x)
 
             Ht free()
-            Wt free()
             recon free()
             error free() 
             dW free()
-            dH free()
 
+            Ht2 := H2 transposeTo()
+            dW2 := error2 * Ht2
+            dW2 mul(lambda)
+            W2 sub(dW2)
+            W2 set(|x| x < 0 ? 0. : x)
+
+            Ht2 free()
+            recon2 free()
+            error2 free()
+            dW2 free()
         }
 
+        N free()
+        Nt free()
+
+        N2 free()
+        Nt2 free()
     }
+
 }
 
 data := const [
@@ -145,13 +209,28 @@ data := const [
     [0., 2.0, 2.0],
     [0.5, 3.0, 2.0]]
 
+data := const [
+    [1. as Double, 1., 0.],
+    [1.5, 0.5, 0 ],
+    [2., 1., 0.],
+    [0.5, 1.2, 0.5],
+    [0.3, 1.5, 0.3],
+    [0.7, 2.8, 2.5],
+    [0.1, 2.4, 2.],
+    [1.0, 3.5, 1],
+    [0., 2.0, 2.0],
+    [0.5, 3.0, 2.0]]
+
+
 testX := Matrix new(3, 10)
 testX set(|i, j| data[j][i])
-nmf := NMF new(testX, 2)
 
-nmf run(1000)
+testX2 := Matrix new(3, 10)
+testX2 set(|i, j| data[j][i])
 
-"Normal nmf: " println()
+nmf := NMF new(testX, testX2, 2)
+nmf gradientDescent(1, 100)
+
 
 "W is : " print()
 nmf W toString() println()
@@ -167,27 +246,26 @@ testX toString() println()
 "W*H is : " print()
 xapp toString() println()
 
-nmf free()
 xapp free()
 
-" Gradient Descent: " println()
-nmf = NMF new(testX, 2)
-nmf gradientDescent(1000)
+///////////////////////////
 
-"W is : " print()
-nmf W toString() println()
+"W2 is : " print()
+nmf W2 toString() println()
 
-"H is : " print()
-nmf H toString() println()
+"H2 is : " print()
+nmf H2 toString() println()
 
-xapp = nmf W * nmf H
+xapp2 := nmf W2 * nmf H2
 
-"X is : " print()
-testX toString() println()
+"X2 is : " print()
+testX2 toString() println()
 
-"W*H is : " print()
-xapp toString() println()
+"W2*H2 is : " print()
+xapp2 toString() println()
+
+xapp2 free()
 
 nmf free()
-xapp free()
 testX free()
+testX2 free()
