@@ -148,6 +148,14 @@ Matrix: cover from gslMatrix*{
         }
     }
 
+    set: func ~closurex (f: Func(Double)->Double){
+        for(i in 0 .. this size1()){
+            for(j in 0 .. this size2()){
+                set(i, j, f(get(i,j)))
+            }
+        }
+    }
+
     set: func ~closureij (f: Func(SizeT,SizeT)->Double){
         for(i in 0 .. this size1()){
             for(j in 0 .. this size2()){
