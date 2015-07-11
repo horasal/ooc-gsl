@@ -205,12 +205,12 @@ Matrix: cover from gslMatrix*{
     _get_col: extern(gsl_matrix_get_col) static func(v: Vector, m: Matrix, i: SizeT)
 
     getRow: func(i: SizeT) -> Vector{
-        v := Vector new(this size1())
+        v := Vector new(this size2())
         _get_row(v, this, i)
         v
     }
     getCol: func(i: SizeT) -> Vector{
-        v := Vector new(this size2())
+        v := Vector new(this size1())
         _get_col(v, this, i)
         v
     }
